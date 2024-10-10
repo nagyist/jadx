@@ -51,7 +51,6 @@ import jadx.core.utils.Utils;
 import jadx.core.utils.exceptions.JadxRuntimeException;
 import jadx.core.utils.files.FileUtils;
 import jadx.core.utils.tasks.TaskExecutor;
-import jadx.core.xmlgen.BinaryXMLParser;
 import jadx.core.xmlgen.ResourcesSaver;
 
 /**
@@ -92,8 +91,6 @@ public final class JadxDecompiler implements Closeable {
 	private List<JavaClass> classes;
 	private List<ResourceFile> resources;
 
-	private BinaryXMLParser binaryXmlParser;
-
 	private final IDecompileScheduler decompileScheduler = new DecompilerScheduler();
 	private final JadxEventsImpl events = new JadxEventsImpl();
 	private final ResourcesLoader resourcesLoader = new ResourcesLoader(this);
@@ -114,6 +111,7 @@ public final class JadxDecompiler implements Closeable {
 		reset();
 		JadxArgsValidator.validate(this);
 		LOG.info("loading ...");
+		FileUtils.updateTempRootDir(args.getFilesGetter().getTempDir());
 		loadPlugins();
 		loadInputFiles();
 
@@ -168,7 +166,6 @@ public final class JadxDecompiler implements Closeable {
 		root = null;
 		classes = null;
 		resources = null;
-		binaryXmlParser = null;
 		events.reset();
 	}
 
@@ -178,6 +175,7 @@ public final class JadxDecompiler implements Closeable {
 		closeInputs();
 		closeLoaders();
 		args.close();
+		FileUtils.deleteTempRootDir();
 	}
 
 	private void closeInputs() {
@@ -465,13 +463,6 @@ public final class JadxDecompiler implements Closeable {
 	@ApiStatus.Internal
 	public RootNode getRoot() {
 		return root;
-	}
-
-	synchronized BinaryXMLParser getBinaryXmlParser() {
-		if (binaryXmlParser == null) {
-			binaryXmlParser = new BinaryXMLParser(root);
-		}
-		return binaryXmlParser;
 	}
 
 	/**

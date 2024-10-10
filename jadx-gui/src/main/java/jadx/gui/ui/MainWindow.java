@@ -952,7 +952,8 @@ public class MainWindow extends JFrame {
 	public void goToMainActivity() {
 		AndroidManifestParser parser = new AndroidManifestParser(
 				AndroidManifestParser.getAndroidManifest(getWrapper().getResources()),
-				EnumSet.of(AppAttribute.MAIN_ACTIVITY));
+				EnumSet.of(AppAttribute.MAIN_ACTIVITY),
+				getWrapper().getArgs().getSecurity());
 		if (!parser.isManifestFound()) {
 			JOptionPane.showMessageDialog(MainWindow.this,
 					NLS.str("error_dialog.not_found", "AndroidManifest.xml"),
@@ -982,7 +983,8 @@ public class MainWindow extends JFrame {
 	public void goToApplication() {
 		AndroidManifestParser parser = new AndroidManifestParser(
 				AndroidManifestParser.getAndroidManifest(getWrapper().getResources()),
-				EnumSet.of(AppAttribute.APPLICATION));
+				EnumSet.of(AppAttribute.APPLICATION),
+				getWrapper().getArgs().getSecurity());
 		if (!parser.isManifestFound()) {
 			JOptionPane.showMessageDialog(MainWindow.this,
 					NLS.str("error_dialog.not_found", "AndroidManifest.xml"),
@@ -1007,6 +1009,20 @@ public class MainWindow extends JFrame {
 					NLS.str("error_dialog.title"),
 					JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	public void goToAndroidManifest() {
+		ResourceFile androidManifest = AndroidManifestParser.getAndroidManifest(getWrapper().getResources());
+		if (androidManifest == null) {
+			JOptionPane.showMessageDialog(MainWindow.this,
+					NLS.str("error_dialog.not_found", "AndroidManifest.xml"),
+					NLS.str("error_dialog.title"),
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		JResource res = new JResource(androidManifest, androidManifest.getDeobfName(), JResource.JResType.FILE);
+		tabsController.selectTab(res);
 	}
 
 	private void initMenuAndToolbar() {
@@ -1078,6 +1094,7 @@ public class MainWindow extends JFrame {
 				this::goToMainActivity);
 		JadxGuiAction goToApplicationAction = new JadxGuiAction(ActionModel.GO_TO_APPLICATION,
 				this::goToApplication);
+		JadxGuiAction goToAndroidManifestAction = new JadxGuiAction(ActionModel.GO_TO_ANDROID_MANIFEST, this::goToAndroidManifest);
 		JadxGuiAction decompileAllAction = new JadxGuiAction(ActionModel.DECOMPILE_ALL, this::requestFullDecompilation);
 		JadxGuiAction resetCacheAction = new JadxGuiAction(ActionModel.RESET_CACHE, this::resetCodeCache);
 		JadxGuiAction deobfAction = new JadxGuiAction(ActionModel.DEOBF, this::toggleDeobfuscation);
@@ -1140,6 +1157,7 @@ public class MainWindow extends JFrame {
 		nav.add(commentSearchAction);
 		nav.add(goToMainActivityAction);
 		nav.add(goToApplicationAction);
+		nav.add(goToAndroidManifestAction);
 		nav.addSeparator();
 		nav.add(backAction);
 		nav.add(forwardAction);
@@ -1209,6 +1227,7 @@ public class MainWindow extends JFrame {
 		toolbar.add(commentSearchAction);
 		toolbar.add(goToMainActivityAction);
 		toolbar.add(goToApplicationAction);
+		toolbar.add(goToAndroidManifestAction);
 		toolbar.addSeparator();
 		toolbar.add(backAction);
 		toolbar.add(forwardAction);
@@ -1238,6 +1257,7 @@ public class MainWindow extends JFrame {
 			commentSearchAction.setEnabled(loaded);
 			goToMainActivityAction.setEnabled(loaded);
 			goToApplicationAction.setEnabled(loaded);
+			goToAndroidManifestAction.setEnabled(loaded);
 			backAction.setEnabled(loaded);
 			backVariantAction.setEnabled(loaded);
 			forwardAction.setEnabled(loaded);
@@ -1529,7 +1549,6 @@ public class MainWindow extends JFrame {
 		heapUsageBar.reset();
 		closeAll();
 
-		FileUtils.deleteTempRootDir();
 		dispose();
 		System.exit(0);
 	}
